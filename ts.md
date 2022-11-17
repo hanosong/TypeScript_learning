@@ -67,3 +67,6 @@ num = 0xf23; 16
 > 运算之后会转成 boolean 也行 -> 100 > 20
 
 ### Array
+
+> string[]
+> Array<string>
