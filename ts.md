@@ -162,4 +162,41 @@ const foo: FooType = () => {}
 
 我们需要使用缩小 narrow 集合；使 ts 推断出更加具体的类型
 
-####
+#### 类型别名
+
+> 用于类型注解的抽取和复用
+
+```
+type Mynumber = number
+
+```
+
+#### 接口 interface 的声明
+
+> 对象的另一种声明方式就是通过接口来声明
+> 以声明的方式：关键字 + 名称
+> 接口和类型别名的区别
+> 1：在定义对象类型时，可以任意选择
+> 2：type > 接口
+> 3：type 不可重复声明, interface 可以继承
+> 4：interface 可以被类实现--ts 的面向对象
+
+```
+// interface支持继承
+interface IPerson {
+   name: string
+   age: number
+}
+interface Ikun extends IPerson{ // 继承--接口复用
+   hobby：array
+}
+
+// 被类实现
+class Person implement  IPerson {
+   //必须满足IPerson的条件
+}
+```
+
+##### 小结
+
+如果是非对象类型的定义使用 type，如果时对象类型的声明使用 interface
