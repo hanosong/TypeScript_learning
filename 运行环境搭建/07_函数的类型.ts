@@ -15,6 +15,7 @@ type LyricType = {
     time: number
     text: string
 }
+
 // 返回类型为LyricType[]
 const parseLyric = (lyric: string):LyricType[] => {
     const lyrics: LyricType[] = [];

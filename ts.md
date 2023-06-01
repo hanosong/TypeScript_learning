@@ -36,6 +36,7 @@ num.length // undefined => 包装类型， 搞了一个空对象
 1. 增加了语法的扩展 => 枚举类型（Enum），元组类型（Tuple）
 
 2. 编译 -> babel / TSC
+> ts-node，可以更简单地编写和运行 TypeScript 代码。它在 Node.js 中动态地使用 TypeScript 编译器编译 TypeScript 代码，因此可以更快地编写和测试代码，而无需进行单独的编译步骤。
    -> 使用 tsNode ： npm install ts-node -g
    -> npm install tslib @types/node -g
    -> 查看 ： ts-node 文件名
@@ -43,11 +44,15 @@ num.length // undefined => 包装类型， 搞了一个空对象
 ### 5.变量的声明
 
 > 声明的类型 --> 类型注解（Type Annotation）
-> vat/let/const 标识符：数据类型 = 赋值；
+> vat/let/const `标识符：数据类型 = 赋值；`
 > 声明了类型后，ts 会进行类型检测
 
 ### 6.变量的类型推导---infer
+~~~ts
+let message = "hello" // 此时没有什么变量的类型
+message = 3 // 报错：根据后面赋值内容的类型，自动推导出变量的类型
 
+~~~
 > 不写数据类型，由 ts 自动推导
 
 #### number 类型
@@ -64,10 +69,10 @@ num = 0xf23; 16
 
 #### boolean
 
-> 运算之后会转成 boolean 也行 -> 100 > 20
+> 运算之后会转成 boolean 也行 -> `100 > 20`
 
 #### Array
-
+两种写法：
 > string[]
 > Array<string>
 
@@ -104,10 +109,35 @@ function sum(num1: number, num2: number): number {
    return num1 + num2
 }
 ```
+##### 匿名函数的参数
+由函数执行的上下问可以帮助确定参数和返回值的类型 => 这个过程称之为：上下文类型--contextual typing
+~~~ ts
+const names = ["abc", "cba"];
+names.forEach(item => {
+   console.log(item.toUpperCase())
+})
+~~~
+
+##### 函数的入参是一个对象时
+* 属性之间可以用， 或者；分割
+* 入参的最后一个分隔符可以省略
+* 每个属性的类型部分也是可选的，如果不指定，则为any类型
+* 如果对象中的某个属性是可选的，则在属性的后面加 ？
+~~~ts
+const fn = (person:{age: number, name: string, fav?: string}) => {
+    console.log(person.age); // 28
+    if(person.fav){ // 可选属性
+      console.log(person.fav)
+    }
+}
+
+fn({age: 28, name: 'haha'})
+~~~
 
 #### any
 
 > 在某些情况下，无法确定一个变量的类型，并且它可能动态发生变化时
+> 类似于Dart语言中的dynamic类型
 > => 不限制标识符的任意类型
 > 应用场景：引入第三方库时，缺失类型注解
 
@@ -121,8 +151,9 @@ function sum(num1: number, num2: number): number {
 > 用来指定一个函数是没有返回值的，那么它的返回值就是 void 类型
 > 也可以返回 undefined --> 默认函数就是返回 undefined
 > 注意： 函数本身就是对象
+> 当基于上下文的类型推导（contextual typing）推导返回类型为void时，并不会强制函数一定不能返回内容
 
-```
+```ts
 // foo -> 标识符
 // () => void: () 函数，没有参数； void：返回值是void类型
 const foo:() => void = () => {}
@@ -146,13 +177,20 @@ const foo: FooType = () => {}
 #### tuple 元组类型 -> python 里面有
 
 > 元组数据结构中可以存放不同的数据类型，取出来的 item 也是有明确的类型的 --> 根据索引值取到的值可以确定对应的类型
+> python，swift中也有元组类型
 > 应用场景：函数的返回值有多个时
-
+~~~ts
+const arr: [string, number, number] = ["haha", 18, 188];
+const item1 = arr[0]; // "haha",并且知道类型是string类型
+~~~
+* tuple和arr的区别
+   * 1.数组中通常建议存放相同类型的元素，不同类型的元素推荐使用对象或者元组
+   * 2.元组中的每个元素都有自己的特性的类型，根据索引值获取到的值可以确定对应的类型
 ## Ts 的语法细节
 
 ### 联合类型
 
-> Ts 允许使用多种运算符，从现有类型中构建新类型
+> Ts 允许使用多种运算符，从**现有类型中构建新类型**
 
 #### 1.Union Type 联合类型 |
 
@@ -160,15 +198,20 @@ const foo: FooType = () => {}
 > 表示可以时这些类型中的任何一个值
 > 联合类型中的每一个类型被称之为联合成员 unions member
 
-我们需要使用缩小 narrow 集合；使 ts 推断出更加具体的类型
+用联合类型申明变量或者入参很简单，但是在使用的时候，我们需要使用缩小 narrow 集合；使 ts 推断出更加具体的类型 
+=> ts可以根据我们缩小的代码结构，推断出更加具体的类型
+~~~ts
+
+~~~
 
 #### 类型别名
-
+* 声明一个对象的类型，有两种方式：1.type； 2.interface
 > 用于类型注解的抽取和复用
 
-```
-type Mynumber = number
-
+```ts
+type Mynumber = number | string;
+type Point = {x:number, y:number};
+const fn = (id: Mynumber) => {}
 ```
 
 #### 接口 interface 的声明
@@ -177,8 +220,9 @@ type Mynumber = number
 > 以声明的方式：关键字 + 名称
 > 接口和类型别名的区别
 > 1：在定义对象类型时，可以任意选择
+> 如果是定义非对象类型，通常推荐使用type，比如Direction、Alignment、一些Function；
 > 2：type > 接口
-> 3：type 不可重复声明, interface 可以继承
+> 3：type(别名) 不可重复声明, interface 可以继承
 > 4：interface 可以被类实现--ts 的面向对象
 
 ```
@@ -200,3 +244,50 @@ class Person implement  IPerson {
 ##### 小结
 
 如果是非对象类型的定义使用 type，如果时对象类型的声明使用 interface
+
+### 交叉类型 &
+
+> 多种类型同时满足 --> 多用于对象类型
+~~~ts
+interface Colorful { color: string}
+interface IRun {running: () => void}
+type NewType = Colorful & IRun; // 交叉类型
+const obj: NewType = {
+   color: 'red',
+   running: function () {}
+}
+~~~
+
+#### 类型断言as
+> type assertions
+> 当ts无法获取具体的类型信息
+
+#### 非空断言
+> 当某些值可能是undefined的时候 => 但是我们自己能够确定一定是会有值的
+> 使用！表示 => 确定某个标识符是有值得，可以跳过ts在编译阶段对它得检测
+
+~~~ts
+ const postMsg = (msg?: string) => {
+   console.log(message!.toUpperCase()) // 如果不使用非空断言，则由于msg可能是undefined的原因，ts会报错
+ }
+~~~
+
+#### 字面量类型
+> literal types
+> 将多个字面量类型联合在一起，用于枚举？
+~~~ ts
+type AlignType = 'left' | 'top' | 'center';
+const changeAlign = (diraction: Align) => {};
+changeAlign('left'); // 只能是'left' | 'top' | 'center'
+~~~
+
+##### 字面量推断
+``` ts
+const info = {url: 'xxx', methods: 'POST'}; //此时推断的info类型为{url：string, methods: string};
+
+const request = (url: string, methods: 'POST' | 'GET' ) => {};
+request(info.url, info.methods); // 会报错，因为没办法把一个string类型赋值给一个字面量类型
+```
+
+#### 类型缩小
+
