@@ -24,3 +24,5 @@ if(info.friends){
 
 // 方案2：非空断言 => 与风险，需要确保一定有值
 info.friends!.name = "huahua"
+
+export {}

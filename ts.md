@@ -287,7 +287,184 @@ const info = {url: 'xxx', methods: 'POST'}; //此时推断的info类型为{url�
 
 const request = (url: string, methods: 'POST' | 'GET' ) => {};
 request(info.url, info.methods); // 会报错，因为没办法把一个string类型赋值给一个字面量类型
+
+// 解决方案
+// 方案1：使用类型断言，将info.methods的类型转为转为更加细节的类型
+request(info.url, info.methods as "POST"); 
+
 ```
 
 #### 类型缩小
+> Type Narrowing , 类型缩窄
+> 使用类似`typeof padding === "number"` 的判断语句来缩小TS的执行路径
+> 在给定的执行路径中，通过缩小比声明时更小的类型，这个过程叫缩小（Narrowing）
+> `typeof padding === "number"`称之为类型保护(type guards)
 
+* 常见的几种类型保护
+   - typeof 
+   - 平等缩小 ( === , !==)
+   - instanceof => 是不是某个东西的实例
+   - in => 用于确定对象是否具有带名称的属性
+   如果指定的属性在指定的对象或者其原型链中，则in运算符返回true
+
+   - etc...
+
+##### 使用typeof进行类型缩小
+> 因为TS对如何 typeof操作不同的值进行编码
+
+##### 平等缩小
+> 通过switch或者相等的一些运算符来表达相等性 (比如 ===, !==, == , !=)
+
+## 函数的类型
+函数名本身也是一个标识符，也应该有自己的类型
+函数是一等公民 => 函数可以作为参数，也可以作为返回值进行传递
+
+### 函数类型的表示
+1. 通过编写函数类型表达式（Function Type Expressions）来表示函数类型
+```ts
+// 方案1：函数类型表达式
+// 格式：（参数列表） => 返回值
+// num1: 形参 -- 不能省略，不然就会变成number: any(名字number ，type为any)
+const bar: (num1:number) => number = (arg: number): number => {
+   return 123
+}
+
+// 优化: 使用别名
+type BarType = (num1:number) => number ;
+const bar: BarType = (arg: number) :number => {return 123}
+```
+
+如果回调是函数，且你打算传入一个匿名函数的时候，让它自己进行类型推导，不用手动写类型
+```ts
+// 回调是匿名函数
+calc(function(num1, num2){
+   return num1 + num2
+})
+```
+#### 函数类型参数的格式问题
+> ts对于传入的函数类型的参数个数不进行类型检测
+> 不需要把可能不传入的形参写成可选参数的形式
+错误做法：`(num1?: number)`,不需要`?`
+```ts
+type CalcType = (num1: number, num2: number) => number
+function calc (calcFn: CalcType){
+   calcFn(10,20) // 入参必须符合参数规则
+};
+
+// 回调中并不检测参数的个数，这里不传都行
+calc(function(/* num1, num2 */){
+   return 23
+})
+```
+
+* Ts对于很多类型的检测报不报错，取决于它内部的规则
+```ts
+interface IPerson {
+   name: string,
+   age: number
+}
+
+// 如果把这个对象不通过p，直接赋值，会报错(ts会检测新鲜的东西)
+const p = {
+   name: "haha",
+   age: 15,
+   fav: "basketball"
+}
+
+// 赋值给p，p再赋值给info，不报错
+const info:IPerson = p;
+```
+
+### 函数类型-调用签名 Call Signatures
+> 在js中，函数除了可以被调用，自己也是可以有属性值的
+> 然而前面讲到的函数类型表达式并不能支持声明属性
+>如果想要描述一个带有属性的函数，可以在一个对象类型中写一个调用签名
+
+```ts
+const bar: any = (num1: number) :number => {
+   return 2
+}
+
+// 1. 函数类型表达式：局限性：只能表达出这个是个函数，无法表达出其他属性
+type BarType = (num1: numbere) => number
+const bar: BarType (num1: number) :number => {
+   return 2
+}
+
+//2. 函数的调用前面(从对象的角度来看待这个函数，也可以有其他属性)
+interface IBar {
+   name: string
+   age: number
+   // 函数可以调用：函数调用签名
+   // (参数列表): 返回值类型
+   (num1: number): number
+}
+const bar: IBar = (num1: numbr) : number => {
+   return 123
+}
+// 不报错
+bar.name = "aaa"
+bar.age = 19
+bar(123)
+```
+
+* 开发中该如选择呢？
+   - 1. 如果只是描述函数*类型本身（函数可以被调用），使用函数类型表达式
+   - 2. 如果在描述函数作为对象可以被调用，同时又有其他属性时，使用函数签名
+
+### 构造签名 Construct Signatures
+JS函数也可以使用new操作符调用，当被调用时，TS会认为这是一个构造函数（consturctors）因为他们会产生一个新对象
+   * 可以写一个构造签名，方法是在调用签名前面加一个new关键字
+
+
+### 函数的可选参数
+> ?:
+> 可选参数的类型是什么？ => number | undefined 这两个的联合类型
+> 可选类型的参数必须放在必传参数的后面
+```ts
+function foo (x: number,y?: number){
+   // 如果使用y，则需要类型缩小
+   if(y !== undefined){// do some thing about y}
+}
+```
+### 函数的参数默认值
+> 1.有默认值的情况下，参数的类型注解可以省略
+> y的入参可以是undefined，不会报错 => 所以这个参数可以不传
+```ts
+function foo (x: number,y = 100){
+   
+}
+```
+
+### 函数的剩余参数
+> 从ES6开始，JS也支持剩余参数，剩余参数语法允许我们将一个不定数量的参数放到一个数组中。
+
+```ts
+function sum(...nums:number[]){
+   let total = 0;
+   for (const num of nums) {
+      total += num;
+   }
+   return total
+}
+const res1 = sum(1,2,3)
+```
+
+### 函数的重载
+> 场景：如果编写了一个add函数，希望可以对字符串和数字进行相加
+> 在TS中，我们可以去编写不同的重载签名（overload signatures）来表示函数可以以不同的方式进行调用
+> 一般是编写两个或两个以上的重载签名，再去编写一个通用的函数以及实现
+
+1. 编写重载签名
+2. 编写通用函数
+3. 注意：有是实现体的函数，是不能被直接调用的
+
+#### 联合类型和重载的功能耦合，该怎么选择？
+* 优先使用联合类型
+
+### 可推到的this类型
+> Vue3和react中比较少用this
+## 其他
+
+为什么要在下面 `export {}`?
+因为，要增加一个作用域，不然文件和文件之间的变量重名会报错

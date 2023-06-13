@@ -7,4 +7,6 @@ const fn = (name:string, age?: number | string ): void => {
     console.log(name, )
 }
 fn('haha')
+
+
 export {}
