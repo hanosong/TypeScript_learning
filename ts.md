@@ -462,9 +462,68 @@ const res1 = sum(1,2,3)
 #### 联合类型和重载的功能耦合，该怎么选择？
 * 优先使用联合类型
 
-### 可推到的this类型
+### 可推导的this类型
 > Vue3和react中比较少用this
+* 在没有对ts进行特殊配置的情况下，this是any类型
+* 那么如何配置this，使得为明确的类型呢？
+```ts.config
+"noImplicitThis": true, // 不能有模糊的this
+```
+当设置为true的时候，Ts会根据上下文推导this,但是在不能正确推导时，就会报错，需要我们明确的指定this
+
+在开启noImplicitThis的时候，如何指定this的类型呢？ => 函数的第一个参数类型
+1. 函数的第一个参数我们可以根据该函数之后被调用的情况，用于声明this的类型（名称必须叫this）
+2. 在后续调用函数传入参数时，从第二个参数开始传送的，this参数会在编译后被抹除
+```ts
+function foo (this: {name: string}){
+    console.log(this)
+}
+foo.call({name: 'aha'});
+```
+
+#### this相关的内置工具
+> 用于类型转换，全局可用
+
+* ThisParameterType
+* OmitThisParameter
+* ThisType
+
+## Ts中类的基本使用
+1. 如何声明类的属性：在类的内部声明雷达属性以及对应的类型
+   - 如果类型没有声明，那么它们默认是any
+   - 可以给属性设置初始化值
+   - 在默认的strictPropertyInitialization模式下面我们的属性是必须初始化的，如果没有初始化，那么编译时就会报错
+   如果我们在strictPropertyInitialization模式下确实不希望给属性初始化，可以使用`name!:string`语法
+```ts
+class Person {
+   // 成员属性，需要被声明
+   name/* : strging  */= "xx" // 给一个初始化值，如果给了初始值，就不需要写类型了，直接让ts自己推导
+   age/* : number  */= 0，
+   constructor(name: string, age: number){ // 创建对象的时候，这里面的变量就会被初始化
+      this.name= name,
+      this.age = age
+   }
+}
+
+// 实例对象：instance
+const p1 = new Person()
+const p2 = new Person()
+
+```
+
+2. 继承
+面对对象的其中一大特性就是继承，继承不仅仅可以减少代码量，也是多态的前提
+使用extends关键字实现继承，子类中使用super来访问父类
+* 在ts中，类的属性和方法支持三种修饰符：
+   - plublic：修饰的是在任何地方可见，公有的属性或方法，默认编写的属性就是public
+   - private： 修饰的是仅在同一类中可见，私有的属性或方法
+   - protected: 修饰的是仅在类自身以及子类可见，受保护的属性或方法
+
 ## 其他
 
 为什么要在下面 `export {}`?
 因为，要增加一个作用域，不然文件和文件之间的变量重名会报错
+
+使用node执行ts文件： ts-node
+将ts转为js文件：tsc
+生成ts配置文件：tsc --init => 生成tsconfig.json;
